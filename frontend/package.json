@@ -10,13 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fluentui/react-northstar": "^0.66.2",
-    "react": "^16.14.0",
-    "react-dom": "^16.14.0"
+    "ai": "^3.0.13",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@types/react": "^16.14.59",
-    "@types/react-dom": "^16.9.24",
+    "@types/react": "^18.2.67",
+    "@types/react-dom": "^18.2.22",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "@vitejs/plugin-react": "^4.0.3",

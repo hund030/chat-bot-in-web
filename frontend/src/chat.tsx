@@ -1,8 +1,28 @@
-import { Chat } from "@fluentui/react-northstar";
+"use client";
 
-export const initItems = [
-  {
-    message: <Chat.Message content="Hello! What can I help you?" author="AI" />,
-    key: "1",
-  },
-];
+import { useChat } from "ai/react";
+
+export default function Chat() {
+  const { messages, input, handleInputChange, handleSubmit } = useChat({
+    api: "http://localhost:7071/api/chat",
+  });
+
+  return (
+    <div>
+      {messages.map((m) => (
+        <div key={m.id}>
+          {m.role === "user" ? "User: " : "AI: "}
+          {m.content}
+        </div>
+      ))}
+
+      <form onSubmit={handleSubmit}>
+        <label>
+          Say something...
+          <input value={input} onChange={handleInputChange} />
+        </label>
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  );
+}

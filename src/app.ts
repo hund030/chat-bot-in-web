@@ -48,12 +48,13 @@ server.get("/", (req, res, next) => {
 
 // Setup the static tab
 server.get("/tab", (req, res, next) => {
-  send(req, __dirname + "/views/hello.html").pipe(res);
+  send(req, __dirname + "/dist/index.html").pipe(res);
 });
 
 server.post("/chat", async (req, res) => {
   const data = req.body;
-  const stream = await chatCompletion(data?.userPrompt);
+  console.log(data);
+  const stream = await chatCompletion(data?.prompt);
 
   for await (const part of stream) {
     res.write(part.choices[0]?.delta.content ?? "");

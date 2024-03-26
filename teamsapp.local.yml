@@ -3,75 +3,99 @@
 # Visit https://aka.ms/teamsfx-actions for details on actions
 version: 1.0.0
 
-provision:
-  # Creates a Teams app
-  - uses: teamsApp/create
-    with:
-      # Teams app name
-      name: chatweb0321${{APP_NAME_SUFFIX}}
+# provision:
+  # # Creates a Teams app
+ #  - uses: teamsApp/create
+  #   with:
+   #    # Teams app name
+      # name: chatweb0321${{APP_NAME_SUFFIX}}
     # Write the information of created resources into environment file for
     # the specified environment variable(s).
-    writeToEnvironmentFile:
-      teamsAppId: TEAMS_APP_ID
-
+    # writeToEnvironmentFile:
+      # teamsAppId: TEAMS_APP_ID
+# 
   # Set TAB_DOMAIN and TAB_ENDPOINT for local launch
-  - uses: script
-    with:
-      run:
-        echo "::set-teamsfx-env TAB_DOMAIN=localhost:53000";
-        echo "::set-teamsfx-env TAB_ENDPOINT=https://localhost:53000";
-
-  # Validate using manifest schema
-  - uses: teamsApp/validateManifest
-    with:
-      # Path to manifest template
-      manifestPath: ./appPackage/manifest.json
-  # Build Teams app package with latest env value
-  - uses: teamsApp/zipAppPackage
-    with:
-      # Path to manifest template
-      manifestPath: ./appPackage/manifest.json
-      outputZipPath: ./appPackage/build/appPackage.${{TEAMSFX_ENV}}.zip
-      outputJsonPath: ./appPackage/build/manifest.${{TEAMSFX_ENV}}.json
-  # Validate app package using validation rules
-  - uses: teamsApp/validateAppPackage
-    with:
-      # Relative path to this file. This is the path for built zip file.
-      appPackagePath: ./appPackage/build/appPackage.${{TEAMSFX_ENV}}.zip
-  # Apply the Teams app manifest to an existing Teams app in
-  # Teams Developer Portal.
-  # Will use the app id in manifest file to determine which Teams app to update.
-  - uses: teamsApp/update
-    with:
-      # Relative path to this file. This is the path for built zip file.
-      appPackagePath: ./appPackage/build/appPackage.${{TEAMSFX_ENV}}.zip
-  # Extend your Teams app to Outlook and the Microsoft 365 app
-  - uses: teamsApp/extendToM365
-    with:
-      # Relative path to the build app package.
-      appPackagePath: ./appPackage/build/appPackage.${{TEAMSFX_ENV}}.zip
-    # Write the information of created resources into environment file for
-    # the specified environment variable(s).
-    writeToEnvironmentFile:
-      titleId: M365_TITLE_ID
-      appId: M365_APP_ID
-
+  # - uses: script
+    # with:
+      # run:
+        # echo "::set-teamsfx-env TAB_DOMAIN=localhost:53000";
+        # echo "::set-teamsfx-env TAB_ENDPOINT=https://localhost:53000";
+# 
+  # # Validate using manifest schema
+  # - uses: teamsApp/validateManifest
+    # with:
+      # # Path to manifest template
+      # manifestPath: ./appPackage/manifest.json
+  # # Build Teams app package with latest env value
+  # - uses: teamsApp/zipAppPackage
+    # with:
+      # # # Path to manifest template
+      # manifestPath: ./appPackage/manifest.json
+      # outputZipPath: ./appPackage/build/appPackage.${{TEAMSFX_ENV}}.zip
+      # outputJsonPath: ./appPackage/build/manifest.${{TEAMSFX_ENV}}.json
+  # # Validate app package using validation rules
+  # - uses: teamsApp/validateAppPackage
+    # with:
+      # # Relative path to this file. This is the path for built zip file.
+      # appPackagePath: ./appPackage/build/appPackage.${{TEAMSFX_ENV}}.zip
+  # # Apply the Teams app manifest to an existing Teams app in
+  # # Teams Developer Portal.
+  # # Will use the app id in manifest file to determine which Teams app to update.
+  # - uses: teamsApp/update
+    # with:
+      # # Relative path to this file. This is the path for built zip file.
+      # appPackagePath: ./appPackage/build/appPackage.${{TEAMSFX_ENV}}.zip
+  # # Extend your Teams app to Outlook and the Microsoft 365 app
+  # - uses: teamsApp/extendToM365
+    # with:
+      # # Relative path to the build app package.
+      # appPackagePath: ./appPackage/build/appPackage.${{TEAMSFX_ENV}}.zip
+    # # Write the information of created resources into environment file for
+    # # the specified environment variable(s).
+    # writeToEnvironmentFile:
+      # titleId: M365_TITLE_ID
+      # appId: M365_APP_ID
+# 
 deploy:
   # Install development tool(s)
   - uses: devTool/install
     with:
       devCert:
         trust: true
+      func:
+        version: ~4.0.5530
+        symlinkDir: ./devTools/func
+      dotnet: true
     # Write the information of installed development tool(s) into environment
     # file for the specified environment variable(s).
     writeToEnvironmentFile:
       sslCertFile: SSL_CRT_FILE
       sslKeyFile: SSL_KEY_FILE
+      funcPath: FUNC_PATH
+      dotnetPath: DOTNET_PATH
 
   # Run npm command
   - uses: cli/runNpmCommand
     with:
       args: install --no-audit
+
+  - uses: cli/runNpmCommand
+    name: install dependencies
+    with:
+      workingDirectory: api
+      args: install --no-audit
+
+  - uses: cli/runNpmCommand
+    name: install dependencies
+    with:
+      workingDirectory: frontend
+      args: install --no-audit
+
+  - uses: cli/runNpmCommand
+    name: build frontend
+    with:
+      workingDirectory: frontend
+      args: run build
 
   # Generate runtime environment variables
   - uses: file/createOrUpdateEnvironmentFile
@@ -81,5 +105,18 @@ deploy:
         PORT: 53000
         SSL_CRT_FILE: ${{SSL_CRT_FILE}}
         SSL_KEY_FILE: ${{SSL_KEY_FILE}}
+        AZURE_OPENAI_ENDPOINT: ${{AZURE_OPENAI_ENDPOINT}}
+        AZURE_OPENAI_API_KEY: ${{AZURE_OPENAI_API_KEY}}
+
+  # Generate runtime environment variables for backend
+  - uses: file/createOrUpdateEnvironmentFile
+    with:
+      target: ./api/.localConfigs
+      envs:
+        M365_CLIENT_ID: ${{AAD_APP_CLIENT_ID}}
+        M365_CLIENT_SECRET: ${{SECRET_AAD_APP_CLIENT_SECRET}}
+        M365_TENANT_ID: ${{AAD_APP_TENANT_ID}}
+        M365_AUTHORITY_HOST: ${{AAD_APP_OAUTH_AUTHORITY_HOST}}
+        ALLOWED_APP_IDS: 1fec8e78-bce4-4aaf-ab1b-5451cc387264;5e3ce6c0-2b1f-4285-8d4b-75ee78787346;0ec893e0-5785-4de6-99da-4ed124e5296c;4345a7b9-9a63-4910-a426-35363201d503;4765445b-32c6-49b0-83e6-1d93765276ca;d3590ed6-52b3-4102-aeff-aad2292ab01c;00000002-0000-0ff1-ce00-000000000000;bc59ab01-8403-45c6-8796-ac3ef710b3e3
         AZURE_OPENAI_ENDPOINT: ${{AZURE_OPENAI_ENDPOINT}}
         AZURE_OPENAI_API_KEY: ${{AZURE_OPENAI_API_KEY}}
