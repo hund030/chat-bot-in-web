@@ -2,7 +2,7 @@
 
 ## DEMO
 
-![DEMO](./demo/)
+![DEMO](./demo/demo.mp4)
 
 ## Get Started
 
